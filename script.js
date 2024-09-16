@@ -79,6 +79,13 @@ const CourseInfo = {
     let students = []
     
     for(let submission of submissions){
+        let assignment = ag.assignments.find(assignment => assignment.id === submission.assignment_id);
+        //Due date check
+        let dueDate = new Date(assignment.due_at)
+        let today = new Date()
+        if(dueDate > today){
+            continue;
+        }
         let foundDup = false
        for(let student of students){
         if(submission.learner_id === student.id){
