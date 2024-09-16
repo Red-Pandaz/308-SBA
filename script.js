@@ -95,13 +95,11 @@ const CourseInfo = {
         let assignment = ag.assignments.find(assignment => assignment.id === submission.assignment_id);
         // Checking for invalid input
         try{
-            if(assignment.point_possible === 0){
+            if(assignment.points_possible === 0){
                 throw new Error('Assignment cannot have a max grade of 0; cannot calculate percentage dividing by zero')
-            }
-            if(typeof assignment.points_possible === 'string'){
-                throw new Error(`${assignment.point_possible} is a string. Please provide an integer or float`)
-            }
-            if(typeof submission.submission.score === 'string'){
+            } else if(typeof assignment.points_possible === 'string'){
+                throw new Error(`${assignment.points_possible} is a string. Please provide an integer or float`)
+            } else if(typeof submission.submission.score === 'string'){
                 throw new Error(`${submission.submission.score} is a string. Please provide an integer or float`)
             }
         } catch(err){
@@ -111,17 +109,16 @@ const CourseInfo = {
         // Due date check
         let penalty = 0;
         let dueDate = new Date(assignment.due_at);
-        let today = new Date();
+        const TODAY = new Date();
         let submitDate = new Date(submission.submission.submitted_at);
-        if(dueDate > today){
+        if(dueDate > TODAY){
             continue;
-        };
-        // Deduct 10% off total grade if late
-        if(dueDate < submitDate){
+        } else if(dueDate < submitDate){
             penalty += assignment.points_possible * .1;
         };
+        // Duplicates are assumed to be false unless a match is found
         let foundDup = false;
-       for(let student of students){
+        for(let student of students){
         if(submission.learner_id === student.id){
             student.submissions.push({
                 assignment_id: submission.assignment_id,
@@ -131,7 +128,7 @@ const CourseInfo = {
             foundDup = true;
         };
        };
-       // Create new student if not found
+       // Create new student if no duplicate found
     if(foundDup === false){
         students.push({
             id: submission.learner_id,
@@ -162,31 +159,10 @@ const CourseInfo = {
     returnArray.push(returnObj);
     
     })
-  console.log(returnArray);
+    // Return final array
+   return returnArray
 }
 
-getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions)
+const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions)
+console.log(result)
 
-//     // here, we would process this data to achieve the desired result.
-//     const result = [
-//       {
-//         id: 125,
-//         avg: 0.985, // (47 + 150) / (50 + 150)
-//         1: 0.94, // 47 / 50
-//         2: 1.0 // 150 / 150
-//       },
-//       {
-//         id: 132,
-//         avg: 0.82, // (39 + 125) / (50 + 150)
-//         1: 0.78, // 39 / 50
-//         2: 0.833 // late: (140 - 15) / 150
-//       }
-//     ];
-  
-//     return result;
-//   }
-  
-//   const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
-  
-//   console.log(result);
-  
