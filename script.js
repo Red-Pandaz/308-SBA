@@ -76,57 +76,93 @@ const CourseInfo = {
   ];
   
   function getLearnerData(course, ag, submissions) {
+
+    // Making sure assignment has correct course id
+    // Using try/catch as instructed
+    try{
+        if(course.id != ag.course_id){
+            throw new Error ('assignment does not match course, please provide valid input')
+        }
+    } catch(err){
+        console.log(err)
+        return
+    }
+
     let students = []
     let returnArray = []
     
     for(let submission of submissions){
         let assignment = ag.assignments.find(assignment => assignment.id === submission.assignment_id);
-        //Due date check
-        let dueDate = new Date(assignment.due_at)
-        let today = new Date()
+        // Checking for invalid input
+        try{
+            if(assignment.point_possible === 0){
+                throw new Error('Assignment cannot have a max grade of 0; cannot calculate percentage dividing by zero')
+            }
+            if(typeof assignment.points_possible === 'string'){
+                throw new Error(`${assignment.point_possible} is a string. Please provide an integer or float`)
+            }
+            if(typeof submission.submission.score === 'string'){
+                throw new Error(`${submission.submission.score} is a string. Please provide an integer or float`)
+            }
+        } catch(err){
+            console.log(err)
+            return
+        }
+        // Due date check
+        let penalty = 0;
+        let dueDate = new Date(assignment.due_at);
+        let today = new Date();
+        let submitDate = new Date(submission.submission.submitted_at);
         if(dueDate > today){
             continue;
-        }
-        let foundDup = false
+        };
+        // Deduct 10% off total grade if late
+        if(dueDate < submitDate){
+            penalty += assignment.points_possible * .1;
+        };
+        let foundDup = false;
        for(let student of students){
         if(submission.learner_id === student.id){
             student.submissions.push({
                 assignment_id: submission.assignment_id,
-                score: submission.submission.score,
+                score: submission.submission.score - penalty,
                 maxScore: assignment.points_possible
-            })
+            });
             foundDup = true;
-        }
-       }
+        };
+       };
+       // Create new student if not found
     if(foundDup === false){
         students.push({
             id: submission.learner_id,
             submissions: [{
                 assignment_id: submission.assignment_id,
-                score: submission.submission.score,
+                score: submission.submission.score - penalty,
                 maxScore: assignment.points_possible
             }]
 
-        })
-    }
-    }
+        });
+    };
+    };
+    // Creating a nice clean object array with desired results
     students.forEach(function(student){
         let returnObj = {
             id: student.id,
             avg: null
         }
-        let scoreSum;
-        let maxScoreSum;
+        // Calculating percentages and averages
+        let scoreSum = 0;
+        let maxScoreSum = 0;
         student.submissions.forEach(function(submission){
             scoreSum += submission.score;
             maxScoreSum += submission.maxScore;
             returnObj[submission.assignment_id] = submission.score / submission.maxScore
         })
-    returnObj.avg = scoreSum / maxScoreSum
-    returnArray.push(returnObj)
+    returnObj.avg = scoreSum / maxScoreSum;
+    returnArray.push(returnObj);
     
     })
-  console.log(returnArray)
+  console.log(returnArray);
 }
 
 getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions)
