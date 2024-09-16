@@ -77,6 +77,7 @@ const CourseInfo = {
   
   function getLearnerData(course, ag, submissions) {
     let students = []
+    let returnArray = []
     
     for(let submission of submissions){
         let assignment = ag.assignments.find(assignment => assignment.id === submission.assignment_id);
@@ -91,7 +92,8 @@ const CourseInfo = {
         if(submission.learner_id === student.id){
             student.submissions.push({
                 assignment_id: submission.assignment_id,
-                score: submission.submission.score
+                score: submission.submission.score,
+                maxScore: assignment.points_possible
             })
             foundDup = true;
         }
@@ -101,13 +103,30 @@ const CourseInfo = {
             id: submission.learner_id,
             submissions: [{
                 assignment_id: submission.assignment_id,
-                score: submission.submission.score
+                score: submission.submission.score,
+                maxScore: assignment.points_possible
             }]
 
         })
     }
     }
-  console.log(students)
+    students.forEach(function(student){
+        let returnObj = {
+            id: student.id,
+            avg: null
+        }
+        let scoreSum;
+        let maxScoreSum;
+        student.submissions.forEach(function(submission){
+            scoreSum += submission.score;
+            maxScoreSum += submission.maxScore;
+            returnObj[submission.assignment_id] = submission.score / submission.maxScore
+        })
+    returnObj.avg = scoreSum / maxScoreSum
+    returnArray.push(returnObj)
+    
+    })
+  console.log(returnArray)
 }
 
 getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions)
